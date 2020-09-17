@@ -1,7 +1,11 @@
 package com.thoughtworks.capability.gtb;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.TimeZone;
 
 /**
  * 脑洞会议系统v3.0
@@ -17,25 +21,35 @@ import java.time.format.DateTimeFormatter;
  */
 public class MeetingSystemV3 {
 
-  public static void main(String[] args) {
-    String timeStr = "2020-04-01 14:30:00";
+  public static String nextMeetingTime(String timeStr) {
+    System.out.printf("伦敦会议时间时间：%s\n", timeStr);
 
     // 根据格式创建格式化类
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     // 从字符串解析得到会议时间
     LocalDateTime meetingTime = LocalDateTime.parse(timeStr, formatter);
 
-    LocalDateTime now = LocalDateTime.now();
-    if (now.isAfter(meetingTime)) {
-      LocalDateTime tomorrow = now.plusDays(1);
-      int newDayOfYear = tomorrow.getDayOfYear();
-      meetingTime = meetingTime.withDayOfYear(newDayOfYear);
+    ZonedDateTime londonTime = ZonedDateTime.of(meetingTime, TimeZone.getTimeZone("Europe/London").toZoneId());
+    ZonedDateTime shanghaiTime = londonTime.withZoneSameInstant(TimeZone.getTimeZone("Asia/Shanghai").toZoneId());
 
-      // 格式化新会议时间
-      String showTimeStr = formatter.format(meetingTime);
-      System.out.println(showTimeStr);
-    } else {
-      System.out.println("会议还没开始呢");
+    LocalDateTime now = LocalDateTime.now();
+    LocalTime nowTime = now.toLocalTime();
+    LocalDateTime nextMeetingTime = now;
+    if (nowTime.isAfter(shanghaiTime.toLocalTime())) {
+      nextMeetingTime = now.plusDays(1);
     }
+
+    int newDayOfYear = nextMeetingTime.getDayOfYear();
+    ZonedDateTime shanghaiNextMeetingTime = shanghaiTime.withDayOfYear(newDayOfYear);
+    ZonedDateTime chicagoNextMeetingTime = shanghaiNextMeetingTime.withZoneSameInstant(TimeZone.getTimeZone("America/Chicago").toZoneId());
+
+    // 格式化新会议时间
+    String nextMeetingTimeStr = formatter.format(chicagoNextMeetingTime);
+    System.out.printf("芝加哥下次会议时间：%s\n", nextMeetingTimeStr);
+    return nextMeetingTimeStr;
+  }
+
+  public static void main(String[] args) {
+    nextMeetingTime("2020-04-01 14:30:00");
   }
 }
