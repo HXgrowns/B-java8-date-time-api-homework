@@ -1,9 +1,7 @@
 package com.thoughtworks.capability.gtb;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.time.chrono.ChronoLocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
@@ -20,6 +18,9 @@ import java.util.TimeZone;
  * @create 2020-05-19_18:43
  */
 public class MeetingSystemV3 {
+  private static final String LONDON_ZOOM_ID = "Europe/London";
+  private static final String SHANGHAI_ZOOM_ID = "Asia/Shanghai";
+  private static final String CHICAGO_ZOOM_ID = "America/Chicago";
 
   public static String nextMeetingTime(String timeStr) {
     System.out.printf("伦敦会议时间时间：%s\n", timeStr);
@@ -29,24 +30,31 @@ public class MeetingSystemV3 {
     // 从字符串解析得到会议时间
     LocalDateTime meetingTime = LocalDateTime.parse(timeStr, formatter);
 
-    ZonedDateTime londonTime = ZonedDateTime.of(meetingTime, TimeZone.getTimeZone("Europe/London").toZoneId());
-    ZonedDateTime shanghaiTime = londonTime.withZoneSameInstant(TimeZone.getTimeZone("Asia/Shanghai").toZoneId());
+    ZonedDateTime londonTime = ZonedDateTime.of(meetingTime, ZoneId.of(LONDON_ZOOM_ID));
+    ZonedDateTime shanghaiTime = londonTime.withZoneSameInstant(ZoneId.of(SHANGHAI_ZOOM_ID));
 
     LocalDateTime now = LocalDateTime.now();
     LocalTime nowTime = now.toLocalTime();
     LocalDateTime nextMeetingTime = now;
     if (nowTime.isAfter(shanghaiTime.toLocalTime())) {
-      nextMeetingTime = now.plusDays(1);
+      nextMeetingTime = addDays(shanghaiTime, now);
     }
 
     int newDayOfYear = nextMeetingTime.getDayOfYear();
     ZonedDateTime shanghaiNextMeetingTime = shanghaiTime.withDayOfYear(newDayOfYear);
-    ZonedDateTime chicagoNextMeetingTime = shanghaiNextMeetingTime.withZoneSameInstant(TimeZone.getTimeZone("America/Chicago").toZoneId());
+    ZonedDateTime chicagoNextMeetingTime = shanghaiNextMeetingTime.withZoneSameInstant(ZoneId.of(CHICAGO_ZOOM_ID));
 
     // 格式化新会议时间
     String nextMeetingTimeStr = formatter.format(chicagoNextMeetingTime);
     System.out.printf("芝加哥下次会议时间：%s\n", nextMeetingTimeStr);
     return nextMeetingTimeStr;
+  }
+
+  private static LocalDateTime addDays(ZonedDateTime shanghaiTime,LocalDateTime current) {
+    LocalDate oldLocalDate = shanghaiTime.toLocalDate();
+    LocalDate currentDate = current.toLocalDate();
+    Period between = Period.between(oldLocalDate, currentDate);
+    return LocalDateTime.from(between.addTo(shanghaiTime.toLocalDateTime())).plusDays(1);
   }
 
   public static void main(String[] args) {

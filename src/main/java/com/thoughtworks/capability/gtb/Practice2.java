@@ -17,8 +17,8 @@ public class Practice2 {
         return date.plusDays(3);
       case SATURDAY:
         return date.plusDays(2);
+      default:
+        return date.plusDays(1);
     }
-
-    return date.plusDays(1);
   }
 }
